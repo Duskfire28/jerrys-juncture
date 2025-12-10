@@ -4,8 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jerry's Juncture</title>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1btDw4GxmOi3l2LlkfqZO4GnLxRQKJaE",
+            authDomain: "jerrys-juncture.firebaseapp.com",
+            projectId: "jerrys-juncture",
+            storageBucket: "jerrys-juncture.firebasestorage.app",
+            messagingSenderId: "140518116182",
+            appId: "1:140518116182:web:e211e7a9ea5d31d99064f7",
+            measurementId: "G-MWM8FGGBS4"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        import { 
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword
+        } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+        // Grab HTML elements
+        const emailInput = document.getElementById("email");
+        const passInput = document.getElementById("password");
+        const statusText = document.getElementById("status");
+
+        document.getElementById("signupBtn").onclick = async () => {
+        try {
+            await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
+            statusText.textContent = "Account created!";
+        } catch (error) {
+            statusText.textContent = error.message;
+        }
+        };
+
+        document.getElementById("loginBtn").onclick = async () => {
+        try {
+            await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
+            statusText.textContent = "Logged in!";
+        } catch (error) {
+            statusText.textContent = error.message;
+        }
+        };
+    </script>
 </head>
 <body>
-    <p>Test</p>
+    <input id="email" type="text" placeholder="Email"><br><br>
+    <input id="password" type="password" placeholder="Password"><br><br>
+
+    <button id="signupBtn">Sign Up</button>
+    <button id="loginBtn">Log In</button>
+
+    <p id="status"></p>
 </body>
 </html>
