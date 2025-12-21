@@ -4,10 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jerry's Juncture</title>
-    <script type="module">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        /* Top Navigation Bar */
+        #navbar {
+            background-color: #222;
+            color: white;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #nav-left span,
+        #nav-right span {
+            margin-right: 20px;
+            cursor: pointer;
+        }
+
+        #nav-left span:hover,
+        #nav-right span:hover {
+            text-decoration: underline;
+        }
+
+        /* Main content layout */
+        #content {
+            padding: 20px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        /* Levels list */
+        .level-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        /* Login Popup */
+        #loginOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+        }
+
+        #loginBox {
+            background: white;
+            padding: 25px;
+            width: 300px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        #closePopup {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <div id="navbar">
+        <div id="nav-left">
+            <span id="navHome">Home</span>
+            <span id="navLevels">Levels</span>
+        </div>
+
+        <div id="nav-right">
+            <span id="navAccount">Sign In</span>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div id="content">
+
+        <!-- Placeholder Level List -->
+        <h2>Recent Levels</h2>
+
+        <div class="level-card">Level 1 — by UserA — 2 days ago</div>
+        <div class="level-card">Level 2 — by UserB — 5 days ago</div>
+        <div class="level-card">Level 3 — by You — 1 hour ago</div>
+
+    </div>
+
+    <!-- Login Popup -->
+    <div id="loginOverlay">
+        <div id="loginBox">
+            <span id="closePopup">✖</span>
+            <h3>Sign In</h3>
+            <input id="email" type="text" placeholder="Email">
+            <input id="password" type="password" placeholder="Password">
+            <button id="loginBtn">Log In</button>
+            <button id="signupBtn">Sign Up</button>
+            <p id="status"></p>
+        </div>
+    </div>
+
+    <!-- <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
+        import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
         // TODO: Add SDKs for Firebase products that you want to use
         // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -29,43 +168,255 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);
-
-        import { 
-            createUserWithEmailAndPassword,
-            signInWithEmailAndPassword
-        } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-
-        // Grab HTML elements
-        const emailInput = document.getElementById("email");
-        const passInput = document.getElementById("password");
-        const statusText = document.getElementById("status");
-
+        
+        // Signup
         document.getElementById("signupBtn").onclick = async () => {
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
+                const user = userCredential.user;
+                
+                // Save profile
+                await setDoc(doc(db, "users", user.uid), {
+                    email: user.email,
+                    username: user.email.split("@")[0],
+                    joined: serverTimestamp()
+                });
+                
+                statusText.style.color = "green";
+                statusText.textContent = "Account created!";
+            } catch (error) {
+                statusText.style.color = "red";
+                statusText.textContent = error.message;
+            }
+        };
+        
+        // Login
+        document.getElementById("loginBtn").onclick = async () => {
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
+                const user = userCredential.user;
+                const docSnap = await getDoc(doc(db, "users", user.uid));
+                if (docSnap.exists()) {
+                    usernameDisplay.textContent = docSnap.data().username;
+                }
+                statusText.textContent = "";
+            } catch (error) {
+                statusText.style.color = "red";
+                statusText.textContent = error.message;
+            }
+        };
+        
+        // Logout
+        logoutBtn.onclick = async () => {
+            await signOut(auth);
+        };
+        
+        // Auth state listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                authContainer.style.display = "none";
+                loggedInDiv.style.display = "block";
+                
+                // Fetch username
+                const docSnap = await getDoc(doc(db, "users", user.uid));
+                if (docSnap.exists()) {
+                    usernameDisplay.textContent = docSnap.data().username;
+                }
+            } else {
+                authContainer.style.display = "block";
+                loggedInDiv.style.display = "none";
+            }
+        });
+
+        // Popup Elements
+        const loginOverlay = document.getElementById("loginOverlay");
+        const navAccount = document.getElementById("navAccount");
+        const closePopup = document.getElementById("closePopup");
+
+        // Show popup
+        navAccount.onclick = () => {
+            loginOverlay.style.display = "flex";
+        };
+
+        // Hide popup
+        closePopup.onclick = () => {
+            loginOverlay.style.display = "none";
+        };
+
+        // Clicking outside the login box closes popup
+        loginOverlay.onclick = (e) => {
+            if (e.target === loginOverlay) {
+                loginOverlay.style.display = "none";
+            }
+        };
+    </script> -->
+
+    <script type="module">
+    /* ---------------------------
+       Firebase Imports & Setup
+    ---------------------------- */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import {
+        getAuth,
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        signOut,
+        onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import {
+        getFirestore,
+        doc,
+        setDoc,
+        getDoc,
+        serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1btDw4GxmOi3l2LlkfqZO4GnLxRQKJaE",
+        authDomain: "jerrys-juncture.firebaseapp.com",
+        projectId: "jerrys-juncture",
+        storageBucket: "jerrys-juncture.firebasestorage.app",
+        messagingSenderId: "140518116182",
+        appId: "1:140518116182:web:e211e7a9ea5d31d99064f7",
+        measurementId: "G-MWM8FGGBS4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    /* ---------------------------
+       Popup + UI Elements
+    ---------------------------- */
+    const loginOverlay = document.getElementById("loginOverlay");
+    const navAccount = document.getElementById("navAccount");
+    const closePopup = document.getElementById("closePopup");
+
+    const emailInput = document.getElementById("email");
+    const passInput = document.getElementById("password");
+    const loginBtn = document.getElementById("loginBtn");
+    const signupBtn = document.getElementById("signupBtn");
+    const statusText = document.getElementById("status");
+
+    // This replaces "Sign In" when logged in
+    const navRight = document.getElementById("nav-right");
+
+    /* ---------------------------
+       Popup Controls
+    ---------------------------- */
+    navAccount.onclick = () => {
+        loginOverlay.style.display = "flex";
+    };
+
+    closePopup.onclick = () => {
+        loginOverlay.style.display = "none";
+    };
+
+    loginOverlay.onclick = (e) => {
+        if (e.target === loginOverlay) {
+            loginOverlay.style.display = "none";
+        }
+    };
+
+    /* ---------------------------
+       Signup
+    ---------------------------- */
+    signupBtn.onclick = async () => {
         try {
-            await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                emailInput.value,
+                passInput.value
+            );
+
+            const user = userCredential.user;
+
+            await setDoc(doc(db, "users", user.uid), {
+                email: user.email,
+                username: user.email.split("@")[0],
+                joined: serverTimestamp()
+            });
+
+            statusText.style.color = "green";
             statusText.textContent = "Account created!";
         } catch (error) {
+            statusText.style.color = "red";
             statusText.textContent = error.message;
         }
-        };
+    };
 
-        document.getElementById("loginBtn").onclick = async () => {
+    /* ---------------------------
+       Login
+    ---------------------------- */
+    loginBtn.onclick = async () => {
         try {
-            await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
-            statusText.textContent = "Logged in!";
+            const userCredential = await signInWithEmailAndPassword(
+                auth,
+                emailInput.value,
+                passInput.value
+            );
+
+            const user = userCredential.user;
+            const docSnap = await getDoc(doc(db, "users", user.uid));
+
+            if (docSnap.exists()) {
+                updateNavbarUsername(docSnap.data().username);
+            }
+
+            statusText.textContent = "";
+            loginOverlay.style.display = "none";
+
         } catch (error) {
+            statusText.style.color = "red";
             statusText.textContent = error.message;
         }
+    };
+
+    /* ---------------------------
+       Logout
+    ---------------------------- */
+    function createLogoutButton() {
+        const btn = document.createElement("span");
+        btn.textContent = "Log Out";
+        btn.style.cursor = "pointer";
+        btn.onclick = async () => {
+            await signOut(auth);
         };
-    </script>
-</head>
-<body>
-    <input id="email" type="text" placeholder="Email"><br><br>
-    <input id="password" type="password" placeholder="Password"><br><br>
+        return btn;
+    }
 
-    <button id="signupBtn">Sign Up</button>
-    <button id="loginBtn">Log In</button>
+    /* ---------------------------
+       Update Navbar Username
+    ---------------------------- */
+    function updateNavbarUsername(username) {
+        navRight.innerHTML = "";
 
-    <p id="status"></p>
+        const userSpan = document.createElement("span");
+        userSpan.textContent = username;
+
+        const logoutSpan = createLogoutButton();
+
+        navRight.appendChild(userSpan);
+        navRight.appendChild(logoutSpan);
+    }
+
+    /* ---------------------------
+       Auth State Listener
+    ---------------------------- */
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const docSnap = await getDoc(doc(db, "users", user.uid));
+
+            if (docSnap.exists()) {
+                updateNavbarUsername(docSnap.data().username);
+            }
+        } else {
+            navRight.innerHTML = `<span id="navAccount">Sign In</span>`;
+            document.getElementById("navAccount").onclick = () => {
+                loginOverlay.style.display = "flex";
+            };
+        }
+    });
+</script>
 </body>
 </html>
